@@ -1,0 +1,11 @@
+--- TESTARE ARGUMENTE ---
+Rol primit: inspector
+User primit: bob
+Comanda: filter
+District: downtown
+Dimensiunea unui raport: 200 bytes
+Directorul 'downtown' exista deja.
+Calea pentru fisierul binar este: downtown/reports.dat
+Permisiunile pentru downtown/reports.dat au fost setate la 0664.
+Eroare: Formatul conditiei este invalid. Foloseste camp:operator:valoare
+Scurtatura active_reports-downtown a fost creata cu succes!

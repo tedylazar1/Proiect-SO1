@@ -23,39 +23,39 @@ typedef struct {
     time_t timestamp;
     char description[MAX_DESC];
 } Report;
-// Funcție care transformă permisiunile (st_mode) într-un string lizibil ("rw-r--r--")
+// Functie care transforma permisiunile (st_mode) intr-un string lizibil ("rw-r--r--")
 void print_permissions(mode_t mode) {
     char perms[10] = "---------";
 
-    // Verificăm permisiunile pentru User (Proprietar)
+    // Verificam permisiunile pentru User (Proprietar)
     if (mode & S_IRUSR) perms[0] = 'r';
     if (mode & S_IWUSR) perms[1] = 'w';
     if (mode & S_IXUSR) perms[2] = 'x';
 
-    // Verificăm permisiunile pentru Group
+    // Verificam permisiunile pentru Group
     if (mode & S_IRGRP) perms[3] = 'r';
     if (mode & S_IWGRP) perms[4] = 'w';
     if (mode & S_IXGRP) perms[5] = 'x';
 
-    // Verificăm permisiunile pentru Others (Restul)
+    // Verificam permisiunile pentru Others (Restul)
     if (mode & S_IROTH) perms[6] = 'r';
     if (mode & S_IWOTH) perms[7] = 'w';
     if (mode & S_IXOTH) perms[8] = 'x';
 
     printf("%s", perms);
 }
-// Funcție generată de AI pentru a sparge string-ul "camp:operator:valoare"
+// Functie generata de AI pentru a sparge string-ul "camp:operator:valoare"
 int parse_condition(const char *input, char *field, char *op, char *value) {
     // Folosim sscanf pentru a extrage cuvintele separate de caracterul ':'
-    // %[^:] înseamnă "citește tot până întâlnești două puncte"
+    // %[^:] inseamna "citeste tot pana intalnesti doua puncte"
     if (sscanf(input, "%[^:]:%[^:]:%s", field, op, value) == 3) {
-        return 1; // Succes, am găsit toate cele 3 părți
+        return 1; // Succes, am gasit toate cele 3 parti
     }
     return 0; // Eroare de parsare
 }
 
 int match_condition(Report *r, const char *field, const char *op, const char *value) {
-    // Verificăm severitatea (trebuie convertită din text în număr)
+    // Verificam severitatea (trebuie convertita din text in numar)
     if (strcmp(field, "severity") == 0) {
         int sev = atoi(value);
         if (strcmp(op, "==") == 0) return r->severity == sev;
@@ -65,18 +65,18 @@ int match_condition(Report *r, const char *field, const char *op, const char *va
         if (strcmp(op, ">") == 0) return r->severity > sev;
         if (strcmp(op, "<") == 0) return r->severity < sev;
     }
-    // Verificăm categoria (comparație directă de text)
+    // Verificam categoria (comparatie directa de text)
     else if (strcmp(field, "category") == 0) {
         if (strcmp(op, "==") == 0) return strcmp(r->category, value) == 0;
         if (strcmp(op, "!=") == 0) return strcmp(r->category, value) != 0;
     }
-    // Verificăm inspectorul
+    // Verificam inspectorul
     else if (strcmp(field, "inspector") == 0) {
         if (strcmp(op, "==") == 0) return strcmp(r->inspector_name, value) == 0;
         if (strcmp(op, "!=") == 0) return strcmp(r->inspector_name, value) != 0;
     }
 
-    return 0; // Returnăm 0 dacă nu se potrivește sau câmpul e invalid
+    return 0; // Returnam 0 daca nu se potriveste sau campul e invalid
 }
 int main(int argc, char *argv[]) {
     int target_id = 0;
@@ -110,9 +110,9 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "--remove_report") == 0 && i + 2 < argc) {
             command = "remove_report";
             district = argv[i + 1];
-            // Funcția atoi transformă textul "2" din comandă în numărul întreg 2
+            // Functia atoi transforma textul "2" din comanda in numarul intreg 2
             target_id = atoi(argv[i + 2]);
-            i += 2; // Sărim peste 2 cuvinte (districtul și id-ul)
+            i += 2; // Sarim peste 2 cuvinte (districtul si id-ul)
         }
         else if (strcmp(argv[i], "--view") == 0 && i + 2 < argc) {
             command = "view";
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "--update_threshold") == 0 && i + 2 < argc) {
             command = "update_threshold";
             district = argv[i + 1];
-            threshold_val = atoi(argv[i + 2]); // Transformăm textul în număr
+            threshold_val = atoi(argv[i + 2]); // Transformam textul in numar
             i += 2;
         }
         else if (strcmp(argv[i], "--filter") == 0 && i + 2 < argc) {
@@ -146,32 +146,32 @@ int main(int argc, char *argv[]) {
     printf("District: %s\n", district ? district : "Nespecificat");
     printf("Dimensiunea unui raport: %lu bytes\n", sizeof(Report));
 
-    // Asigură-te că am primit un district din linia de comandă
+    // Asigura ca am primit un district din linia de comanda
     if (district != NULL) {
         if (command != NULL && strcmp(command, "remove_district") == 0) {
-            // Verificăm dacă e manager [cite: 107]
+            // Verificam daca e manager
             if (role == NULL || strcmp(role, "manager") != 0) {
                 printf("Eroare de permisiune: Doar managerul poate sterge un district!\n");
                 return 1;
             }
 
-            // Creăm un proces copil [cite: 105]
+            // Cream un proces copil
             pid_t pid = fork();
 
             if (pid == 0) {
                 // AICI SUNTEM IN COPIL
-                // execlp înlocuiește copilul cu comanda "rm -rf <district>" [cite: 105]
+                // execlp inlocuieste copilul cu comanda "rm -rf <district>"
                 execlp("rm", "rm", "-rf", district, NULL);
 
-                // Dacă execlp dă greș, printăm eroare (normal nu ajunge aici)
+                // Daca execlp da gres, printam eroare (normal nu ajunge aici)
                 perror("Eroare la comanda rm");
                 exit(1);
             }
             else if (pid > 0) {
-                // AICI SUNTEM IN PĂRINTE
-                wait(NULL); // Așteptăm să termine copilul ștergerea
+                // AICI SUNTEM IN PARINTE
+                wait(NULL); // Asteptam sa termine copilul stergerea
 
-                // Acum ștergem și scurtătura symlink [cite: 104]
+                // Acum stergem si scurtatura symlink
                 char symlink_name[256];
                 sprintf(symlink_name, "active_reports-%s", district);
                 unlink(symlink_name);
@@ -185,35 +185,35 @@ int main(int argc, char *argv[]) {
             // Oprim programul aici. Nu vrem sa mearga mai jos sa faca mkdir!
             return 0;
         }
-        // Încercăm să creăm directorul cu permisiunile 0750 (zero în față înseamnă sistem octal)
+        // Incercam sa cream directorul cu permisiunile 0750 (zero in fata inseamna sistem octal)
         int status = mkdir(district, 0750);
 
         if (status == 0) {
             printf("Directorul '%s' a fost creat cu succes!\n", district);
         } else {
-            // Dacă funcția nu returnează 0, cel mai probabil folderul există deja
+            // Daca functia nu returneaza 0, cel mai probabil folderul exista deja
             printf("Directorul '%s' exista deja.\n", district);
         }
 
-        // Construim căile (paths) pentru cele 3 fișiere specifice districtului
+        // Construim caile (paths) pentru cele 3 fisiere specifice districtului
         char reports_path[256];
         char config_path[256];
         char log_path[256];
 
-        // sprintf funcționează ca printf, dar scrie textul într-o variabilă, nu pe ecran
+        // sprintf functioneaza ca printf, dar scrie textul intr-o variabila, nu pe ecran
         sprintf(reports_path, "%s/reports.dat", district);
         sprintf(config_path, "%s/district.cfg", district);
         sprintf(log_path, "%s/logged_district", district);
 
         printf("Calea pentru fisierul binar este: %s\n", reports_path);
-        // 1. Creăm / Deschidem fișierul reports.dat
-        // O_CREAT = creează fișierul dacă nu există
-        // O_RDWR = deschide pentru citire (Read) și scriere (Write)
-        // O_APPEND = orice scriem se va adăuga la sfârșitul fișierului, nu va șterge ce era înainte
+        // 1. Cream / Deschidem fisierul reports.dat
+        // O_CREAT = creeaza fisierul daca nu exista
+        // O_RDWR = deschide pentru citire (Read) si scriere (Write)
+        // O_APPEND = orice scriem se va adauga la sfarsitul fisierului, nu va sterge ce era inainte
         int fd_reports = open(reports_path, O_CREAT | O_RDWR, 0664);
 
         if (fd_reports == -1) {
-            perror("Eroare la deschiderea/crearea reports.dat"); // afișează eroarea exactă
+            perror("Eroare la deschiderea/crearea reports.dat"); // afiseaza eroarea exacta
             return 1;
         }
 
@@ -223,27 +223,27 @@ int main(int argc, char *argv[]) {
             perror("Eroare la setarea permisiunilor");
         }
 
-        // Verificăm dacă utilizatorul a cerut comanda "add"
+        // Verificam daca utilizatorul a cerut comanda "add"
         if (strcmp(command, "add") == 0) {
             Report new_report;
-            // Curățăm memoria cu zero pentru a nu avea "gunoi" în fișier
+            // Curatam memoria cu zero pentru a nu avea "gunoi" in fisier
             memset(&new_report, 0, sizeof(Report));
 
-// Aflăm dimensiunea curentă a fișierului mutând cursorul la final (SEEK_END)
+// Aflam dimensiunea curenta a fisierului mutand cursorul la final (SEEK_END)
             off_t file_size = lseek(fd_reports, 0, SEEK_END);
 
-// Calculăm ID-ul corect citind ultimul raport existent
-            int next_id = 1; // Presupunem că e primul
+// Calculam ID-ul corect citind ultimul raport existent
+            int next_id = 1; // Presupunem ca e primul
             if (file_size > 0) {
                 Report last_report;
-                // Mutăm cursorul înapoi cu 200 bytes față de finalul fișierului
+                // Mutam cursorul inapoi cu 200 bytes fata de finalul fisierului
                 lseek(fd_reports, -sizeof(Report), SEEK_END);
                 read(fd_reports, &last_report, sizeof(Report));
                 next_id = last_report.id + 1;
             }
             new_report.id = next_id;            // Numele inspectorului este preluat din parametrul --user
             if (user != NULL) {
-                // Folosim strncpy pentru siguranță, ca să nu depășim MAX_NAME
+                // Folosim strncpy pentru siguranta, ca sa nu depasim MAX_NAME
                 strncpy(new_report.inspector_name, user, MAX_NAME - 1);
             } else {
                 strcpy(new_report.inspector_name, "Necunoscut");
@@ -256,15 +256,15 @@ int main(int argc, char *argv[]) {
             new_report.timestamp = time(NULL); // Preia timpul exact din acest moment
             strcpy(new_report.description, "Groapa pe strada principala");
             lseek(fd_reports, 0, SEEK_END);
-            // Scriem efectiv blocul de date în fișier (la sfârșit, datorită flag-ului O_APPEND)
+            // Scriem efectiv blocul de date in fisier (la sfarsit, datorita flag-ului O_APPEND)
             ssize_t bytes_written = write(fd_reports, &new_report, sizeof(Report));
 
             if (bytes_written == sizeof(Report)) {
                 printf("Raportul a fost adaugat cu succes in %s!\n", reports_path);
                 //  Notificarea monitorului
-                monitor_status = 0; // Presupunem că eșuează inițial
+                monitor_status = 0; // Presupunem ca esueaza initial
 
-                // Încercăm să deschidem fișierul ascuns din folderul rădăcină
+                // Incercam sa deschidem fisierul ascuns din folderul radacina
                 int fd_pid = open(".monitor_pid", O_RDONLY);
                 if (fd_pid != -1) {
                     char pid_buf[32] = {0};
@@ -273,8 +273,8 @@ int main(int argc, char *argv[]) {
 
                     int monitor_pid = atoi(pid_buf);
 
-                    // Funcția kill(pid, semnal) trimite semnalul!
-                    // Returnează 0 dacă a reușit
+                    // Functia kill(pid, semnal) trimite semnalul!
+                    // Returneaza 0 daca a reusit
                     if (monitor_pid > 0 && kill(monitor_pid, SIGUSR1) == 0) {
                         monitor_status = 1; // Succes!
                         printf("Monitorul a fost notificat cu succes!\n");
@@ -289,19 +289,19 @@ int main(int argc, char *argv[]) {
                 perror("Eroare la scrierea in fisier");
             }
         }
-        // Verificăm dacă utilizatorul a cerut comanda "list"
+        // Verificam daca utilizatorul a cerut comanda "list"
         else if (strcmp(command, "list") == 0) {
 
-            // 1. Prima dată, citim metadatele fișierului reports.dat folosind stat()
+            // 1. Prima data, citim metadatele fisierului reports.dat folosind stat()
             struct stat file_stats;
             if (stat(reports_path, &file_stats) == 0) {
                 printf("\n--- INFO FISIER %s ---\n", reports_path);
                 printf("Permisiuni: ");
-                print_permissions(file_stats.st_mode); // Folosim funcția noastră de mai sus
+                print_permissions(file_stats.st_mode); // Folosim functia noastra de mai sus
                 printf("\n");
                 printf("Dimensiune: %ld bytes\n", file_stats.st_size);
 
-                // Convertim timpul de modificare într-un format text lizibil
+                // Convertim timpul de modificare intr-un format text lizibil
                 char time_str[64];
                 struct tm *timeinfo = localtime(&file_stats.st_mtime);
                 strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", timeinfo);
@@ -309,16 +309,16 @@ int main(int argc, char *argv[]) {
             }
 
             // 2. Acum citim efectiv rapoartele din interior
-            // Deoarece noi am deschis fișierul cu O_APPEND, cursorul intern este la FINALUL fișierului.
-            // Pentru a-l putea citi de la început, trebuie să mutăm cursorul înapoi la byte-ul 0 folosind lseek()
+            // Deoarece noi am deschis fisierul cu O_APPEND, cursorul intern este la FINALUL fisierului.
+            // Pentru a-l putea citi de la inceput, trebuie sa mutam cursorul inapoi la byte-ul 0 folosind lseek()
             lseek(fd_reports, 0, SEEK_SET);
 
             Report current_report;
             int report_count = 0;
 
             printf("--- LISTA RAPOARTE ---\n");
-            // Funcția read() va citi câte 200 de bytes (sau cât e sizeof) și îi va băga în variabila current_report
-            // Când ajunge la finalul fișierului, read() returnează 0 și bucla se oprește.
+            // Functia read() va citi cate 200 de bytes (sau cat e sizeof) si ii va baga in variabila current_report
+            // Cand ajunge la finalul fisierului, read() returneaza 0 si bucla se opreste.
             while (read(fd_reports, &current_report, sizeof(Report)) == sizeof(Report)) {
                 report_count++;
                 printf("Raport #%d | Inspector: %s | Categorie: %s | Severitate: %d | Descriere: %s\n",
@@ -335,21 +335,21 @@ int main(int argc, char *argv[]) {
                 printf("Total rapoarte: %d\n", report_count);
             }
         }
-// Verificăm dacă e comanda remove_report
+// Verificam daca e comanda remove_report
         else if (strcmp(command, "remove_report") == 0) {
 
-            // 1. Verificăm rolul (Pt ca zice proiectul ca doar managerii sterg)
+            // 1. Verificam rolul (Pt ca zice proiectul ca doar managerii sterg)
             if (role == NULL || strcmp(role, "manager") != 0) {
                 printf("Eroare de permisiune: Doar utilizatorii cu rolul 'manager' pot sterge rapoarte!\n");
             } else {
-                lseek(fd_reports, 0, SEEK_SET); // Ne mutăm la începutul fișierului
+                lseek(fd_reports, 0, SEEK_SET); // Ne mutam la inceputul fisierului
                 Report temp;
                 off_t found_offset = -1;
 
-                // 2. Căutăm raportul cu ID-ul cerut
+                // 2. Cautam raportul cu ID-ul cerut
                 while (read(fd_reports, &temp, sizeof(Report)) == sizeof(Report)) {
                     if (temp.id == target_id) {
-                        // Am găsit raportul! Salvăm poziția de la începutul lui
+                        // Am gasit raportul! Salvam pozitia de la inceputul lui
                         found_offset = lseek(fd_reports, 0, SEEK_CUR) - sizeof(Report);
                         break;
                     }
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
                 if (found_offset == -1) {
                     printf("Raportul cu ID %d nu a fost gasit in districtul %s.\n", target_id, district);
                 } else {
-                    // 3. Mutăm (shiftăm) toate rapoartele următoare cu o poziție în spate
+                    // 3. Mutam (shiftam) toate rapoartele urmatoare cu o pozitie in spate
                     off_t read_pos = found_offset + sizeof(Report);
                     off_t write_pos = found_offset;
 
@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
                         write_pos += sizeof(Report);
                     }
 
-                    // 4. Tăiem ultimul bloc duplicat rămas la final
+                    // 4. Taiem ultimul bloc duplicat ramas la final
                     off_t current_size = lseek(fd_reports, 0, SEEK_END);
                     ftruncate(fd_reports, current_size - sizeof(Report));
 
@@ -378,13 +378,13 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-        // Verificăm dacă e comanda view
+        // Verificam daca e comanda view
         else if (strcmp(command, "view") == 0) {
-            lseek(fd_reports, 0, SEEK_SET); // Ne mutăm la începutul fișierului
+            lseek(fd_reports, 0, SEEK_SET); // Ne mutam la inceputul fisierului
             Report temp;
             int found = 0;
 
-            // Căutăm raportul cu ID-ul cerut
+            // Cautam raportul cu ID-ul cerut
             while (read(fd_reports, &temp, sizeof(Report)) == sizeof(Report)) {
                 if (temp.id == target_id) {
                     found = 1;
@@ -394,14 +394,14 @@ int main(int argc, char *argv[]) {
                     printf("Severitate: %d/3\n", temp.severity);
                     printf("Coordonate: %.4f, %.4f\n", temp.latitude, temp.longitude);
 
-                    // Convertim timestamp-ul într-un format lizibil
+                    // Convertim timestamp-ul intr-un format lizibil
                     char time_str[64];
                     struct tm *timeinfo = localtime(&temp.timestamp);
                     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", timeinfo);
-                    printf("Data raportării: %s\n", time_str);
+                    printf("Data raportarii: %s\n", time_str);
 
                     printf("Descriere: %s\n", temp.description);
-                    break; // Am găsit ce căutam, ieșim din buclă
+                    break; // Am gasit ce cautam, iesim din bucla
                 }
             }
 
@@ -409,25 +409,25 @@ int main(int argc, char *argv[]) {
                 printf("Raportul cu ID %d nu a fost gasit in districtul %s.\n", target_id, district);
             }
         }
-        // Verificăm dacă e comanda filter
+        // Verificam daca e comanda filter
         else if (strcmp(command, "filter") == 0) {
             if (condition == NULL) {
                 printf("Eroare: Trebuie sa oferi o conditie pentru filtrare!\n");
             } else {
                 char field[32], op[4], value[64];
 
-                // 1. Parsăm condiția de la tastatură
+                // 1. Parsam conditia de la tastatura
                 if (parse_condition(condition, field, op, value) == 1) {
                     printf("Filtram dupa: Camp=%s | Operator=%s | Valoare=%s\n", field, op, value);
                     printf("--- REZULTATE FILTRARE ---\n");
 
-                    lseek(fd_reports, 0, SEEK_SET); // Ne mutăm la început
+                    lseek(fd_reports, 0, SEEK_SET); // Ne mutam la inceput
                     Report temp;
                     int match_count = 0;
 
-                    // 2. Citim rapoartele rând pe rând
+                    // 2. Citim rapoartele rand pe rand
                     while (read(fd_reports, &temp, sizeof(Report)) == sizeof(Report)) {
-                        // 3. Testăm raportul cu funcția AI-ului
+                        // 3. Testam raportul cu functia AI-ului
                         if (match_condition(&temp, field, op, value) == 1) {
                             match_count++;
                             printf("-> [Raport #%d] %s (%s) - Severitate: %d\n",
@@ -443,27 +443,27 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-        // Verificăm dacă e comanda update_threshold
+        // Verificam daca e comanda update_threshold
         else if (strcmp(command, "update_threshold") == 0) {
 
-            // 1. Doar managerii au voie să modifice pragul
+            // 1. Doar managerii au voie sa modifice pragul
             if (role == NULL || strcmp(role, "manager") != 0) {
                 printf("Eroare de permisiune: Doar utilizatorii cu rolul 'manager' pot actualiza pragul!\n");
             } else {
                 struct stat cfg_stat;
 
-                // 2. Verificăm dacă fișierul există deja folosind stat()
+                // 2. Verificam daca fisierul exista deja folosind stat()
                 if (stat(config_path, &cfg_stat) == 0) {
 
-                    // Extragem doar ultimii 9 biți (permisiunile) folosind masca 0777
+                    // Extragem doar ultimii 9 biti (permisiunile) folosind masca 0777
                     mode_t permisiuni_curente = cfg_stat.st_mode & 0777;
 
-                    // Verificăm dacă sunt EXACT 0640 (cerință strictă a proiectului)
+                    // Verificam daca sunt EXACT 0640 (cerinta prof)
                     if (permisiuni_curente != 0640) {
                         printf("Eroare de Securitate! Permisiunile pentru %s nu sunt 0640. Refuz modificarea!\n", config_path);
                     } else {
                         // Permisiunile sunt sigure, putem scrie
-                        // O_TRUNC șterge textul vechi pentru a pune noua valoare
+                        // O_TRUNC sterge textul vechi pentru a pune noua valoare
                         int fd_cfg = open(config_path, O_WRONLY | O_TRUNC);
                         char buffer[64];
                         sprintf(buffer, "SEVERITY_THRESHOLD=%d\n", threshold_val);
@@ -472,9 +472,9 @@ int main(int argc, char *argv[]) {
                         printf("Pragul de severitate a fost actualizat la %d.\n", threshold_val);
                     }
                 } else {
-                    // 3. Fișierul nu există, îl creăm noi curat și îi forțăm permisiunile la 0640
+                    // 3. Fisierul nu exista, il cream noi curat si ii fortam permisiunile la 0640
                     int fd_cfg = open(config_path, O_CREAT | O_WRONLY, 0640);
-                    chmod(config_path, 0640); // Forțăm exact 0640
+                    chmod(config_path, 0640); // Fortam exact 0640
 
                     char buffer[64];
                     sprintf(buffer, "SEVERITY_THRESHOLD=%d\n", threshold_val);
@@ -484,12 +484,12 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-        // --- CREAREA LEGĂTURII SIMBOLICE ---
+        // --- CREAREA LEGATURII SIMBOLICE ---
         char symlink_name[256];
         sprintf(symlink_name, "active_reports-%s", district);
 
-        // Funcția symlink(destinația, numele_shortcut_ului) creează legătura
-        // Folosim unlink înainte pentru a șterge vechiul shortcut dacă există deja
+        // Functia symlink(destinatia, numele_shortcut_ului) creeaza legatura
+        // Folosim unlink inainte pentru a sterge vechiul shortcut daca exista deja
         unlink(symlink_name);
         if (symlink(reports_path, symlink_name) == 0) {
             printf("Scurtatura %s a fost creata cu succes!\n", symlink_name);
@@ -504,7 +504,7 @@ int main(int argc, char *argv[]) {
             struct stat log_stat;
             int can_write = 0;
 
-            // 1. Folosim stat() pentru a citi permisiunile reale ale fișierului
+            // 1. Folosim stat() pentru a citi permisiunile reale ale fisierului
             if (stat(log_path, &log_stat) == 0) {
                 mode_t mode = log_stat.st_mode;
 
@@ -517,24 +517,24 @@ int main(int argc, char *argv[]) {
                     if (mode & S_IWGRP) can_write = 1; // Are bitul de scriere (w) pentru grup?
                 }
             } else {
-                // Dacă fișierul nu există încă, doar managerul are dreptul să inițieze crearea lui
+                // Daca fisierul nu exista inca, doar managerul are dreptul sa initieze crearea lui
                 if (role != NULL && strcmp(role, "manager") == 0) {
                     can_write = 1;
                 }
             }
 
-            // 2. Acționăm pe baza permisiunilor citite de pe disc
+            // 2. Actionam pe baza permisiunilor citite de pe disc
             if (can_write) {
                 int fd_log = open(log_path, O_CREAT | O_WRONLY | O_APPEND, 0644);
                 if (fd_log != -1) {
-                    chmod(log_path, 0644); // Forțăm 0644
+                    chmod(log_path, 0644); // Fortam 0644
 
                     char log_buffer[256];
                     time_t now = time(NULL);
-// Formatăm linia de bază (fără \n la final)
+// Formatam linia de baza (fara \n la final)
                     sprintf(log_buffer, "%ld\t%s\t%s\t%s", now, user ? user : "Necunoscut", role, command);
 
-                    // Adăugăm mesajul despre monitor DOAR dacă a fost comanda "add"
+                    // Adaugam mesajul despre monitor DOAR daca a fost comanda "add"
                     if (strcmp(command, "add") == 0) {
                         if (monitor_status == 1) {
                             strcat(log_buffer, "\t[Monitor Notificat Succes]\n");
@@ -547,14 +547,14 @@ int main(int argc, char *argv[]) {
                     close(fd_log);
                 }
             } else {
-                // Deoarece fișierul are 644 (rw-r--r--), inspectorul nu are S_IWGRP, deci pică aici automat!
+                // Deoarece fisierul are 644 (rw-r--r--), inspectorul nu are S_IWGRP, deci pica aici automat!
                 printf("Notificari Securitate: Rolul tau nu are permisiuni de scriere (lipseste bitul w) pentru %s. Actiunea nu a fost logata.\n", log_path);
             }
         }
         close(fd_reports);
     } else {
-        printf("Eroare: Nu ai specificat un district în comanda!\n");
-        return 1; // Ieșim din program cu eroare
+        printf("Eroare: Nu ai specificat un district in comanda!\n");
+        return 1; // Iesim din program cu eroare
     }
     return 0;
 }
